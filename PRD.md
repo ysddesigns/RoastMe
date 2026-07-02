@@ -150,6 +150,15 @@ This is the single most important animation in the app. Get this right and the r
 
 - Check `AccessibilityInfo.isReduceMotionEnabled()` on mount; if true, replace the spring overshoot in §7.3 with a plain 150ms fade, and drop the pulsing loading glyph for a static icon. Haptics stay — they're not a motion concern.
 
+### 7.6 Come-back reminder (local, both platforms)
+
+Added post-v0.1 — a lightweight re-engagement nudge that doesn't require accounts, a backend, or push tokens, so it doesn't conflict with §2's non-goals.
+
+- **Permission ask:** only after the user has seen their first roast this session — not on cold open, before they've felt any payoff.
+- **Trigger:** when the app backgrounds (`AppState` → `background`/`inactive`) after at least one roast has been shown. Cancel the pending reminder the moment the app returns to `active`, so it never fires while they're already back in the app.
+- **Delivery:** `expo-notifications` local scheduled notification (`TIME_INTERVAL` trigger, ~20h out, no repeat), one roast-flavored line picked at random from a short pool. Works in Expo Go on both iOS and Android — no dev build or push token required, since nothing is sent remotely.
+- **Non-goal still holds:** no server-side push, no token storage, no notification history. If server-triggered push is wanted later (e.g. notifying when an async-generated roast is ready), that's a separate scope decision — see §8.
+
 ---
 
 ## 8. Tech Stack
@@ -165,8 +174,9 @@ This is the single most important animation in the app. Get this right and the r
 | Sharing            | `expo-sharing`                                                                                                                                       | Native share sheet — let the OS handle WhatsApp/Instagram/X targets, don't build custom share integrations                                                                                     |
 | Backend            | Single serverless function (Node) or Supabase Edge Function                                                                                          | One route: `POST /roast { input: string } → { roast: string }`                                                                                                                                 |
 | AI                 | Claude API (`claude-sonnet-5` or `claude-haiku-4-5` — Haiku is likely fast/cheap enough for a one-liner and keeps §3's latency target easier to hit) | See §9 for prompt                                                                                                                                                                              |
+| Notifications       | `expo-notifications`                                                                                                                                | Local scheduled reminder only (§7.6) — no push tokens, no server component, works in Expo Go on both platforms                                                                                 |
 
-**Explicitly not needed for v1:** database, auth, analytics SDK beyond whatever's built into Expo/EAS, push notifications, offline queueing.
+**Explicitly not needed for v1:** database, auth, analytics SDK beyond whatever's built into Expo/EAS, remote/server-triggered push notifications, offline queueing.
 
 ---
 

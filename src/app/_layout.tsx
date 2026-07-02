@@ -7,7 +7,8 @@ import {
 import { Stack } from "expo-router/stack";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { AnimatedSplash } from "@/components/animated-splash";
 import { color } from "@/constants/theme";
 
 SplashScreen.preventAutoHideAsync();
@@ -18,6 +19,7 @@ export default function RootLayout() {
     Inter_700Bold,
     Inter_900Black,
   });
+  const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -39,6 +41,10 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: color.bg },
         }}
       />
+      {/* Home is already mounted underneath, so the pop hard-cuts straight to it. */}
+      {showAnimatedSplash && (
+        <AnimatedSplash onFinish={() => setShowAnimatedSplash(false)} />
+      )}
     </>
   );
 }

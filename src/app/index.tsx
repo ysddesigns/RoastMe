@@ -1,6 +1,7 @@
 import * as Sharing from "expo-sharing";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  AppState,
   KeyboardAvoidingView,
   Pressable,
   ScrollView,
@@ -20,6 +21,12 @@ import { RoastReveal } from "@/components/roast-reveal";
 import { SHARE_CARD_SIZE, ShareCard } from "@/components/share-card";
 import { color, font, unit } from "@/constants/theme";
 import { TONES, type Tone } from "@/constants/tones";
+import {
+  cancelComeBackReminder,
+  ensureAndroidChannel,
+  requestPermissionsIfNeeded,
+  scheduleComeBackReminder,
+} from "@/lib/notifications";
 
 const MAX_INPUT_LENGTH = 300;
 
@@ -34,6 +41,23 @@ export default function RoastScreen() {
   const [tone, setTone] = useState<Tone>("savage");
   const [error, setError] = useState("");
   const cardRef = useRef<View>(null);
+  const hasRoastedRef = useRef(false);
+
+  useEffect(() => {
+    ensureAndroidChannel();
+
+    // Schedule the local "come back" reminder when the user backgrounds the
+    // app after actually seeing a roast; cancel it the moment they return.
+    // No push tokens, no server — the whole thing lives on-device.
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        cancelComeBackReminder();
+      } else if ((state === "background" || state === "inactive") && hasRoastedRef.current) {
+        scheduleComeBackReminder();
+      }
+    });
+    return () => subscription.remove();
+  }, []);
 
   async function requestRoast() {
     setError("");
@@ -54,6 +78,11 @@ export default function RoastScreen() {
       setRoast(data.roast);
       setTone(data.tone && TONES.includes(data.tone) ? data.tone : "savage");
       setPhase("result");
+      if (!hasRoastedRef.current) {
+        hasRoastedRef.current = true;
+        // Ask only after they've felt the payoff once — not on cold open.
+        requestPermissionsIfNeeded();
+      }
     } catch {
       setError("The roast got away. Check your connection and try again.");
       setPhase("input");

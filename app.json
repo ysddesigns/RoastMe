@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "RoastMe Next Level",
+    "name": "RoastMe",
     "slug": "RoastMe",
-    "version": "1.0.1",
+    "version": "1.0.12",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "roastme",
@@ -52,6 +52,11 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "autolinking": {
+      "ios": {
+        "buildFromSource": ["react-native-reanimated", "react-native-worklets"]
+      }
     },
     "extra": {
       "router": {},
